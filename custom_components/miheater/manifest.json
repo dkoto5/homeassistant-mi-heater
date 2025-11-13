@@ -1,7 +1,7 @@
 {
   "domain": "miheater",
   "name": "Mi Heater",
-  "version": "2.9.4",
+  "version": "2.9.5",
   "documentation": "https://github.com/dkoto5/homeassistant-mi-heater",
   "requirements": ["python-miio>=0.5.4"],
   "dependencies": [],
