@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Import the device library
 from miio import DeviceException
-from miio.heater import MiHeater
+from miio.heater import Heater
 
 
 async def async_setup_entry(
@@ -35,7 +35,7 @@ async def async_setup_entry(
     name = "Mi Heater"
 
     # Initialize the device
-    device = MiHeater(host, token)
+    device = Heater(host, token)
 
     # Create a DataUpdateCoordinator to manage data updates
     coordinator = MiHeaterDataUpdateCoordinator(hass, device)
@@ -50,7 +50,7 @@ async def async_setup_entry(
 class MiHeaterDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the Mi Heater device."""
 
-    def __init__(self, hass: HomeAssistant, device: MiHeater):
+    def __init__(self, hass: HomeAssistant, device: Heater):
         """Initialize the coordinator."""
         self.device = device
         super().__init__(
