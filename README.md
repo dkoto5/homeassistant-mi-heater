@@ -17,7 +17,7 @@ Xiaomi Mi Smart Space Heater 1S (zhimi.heater.zb1) component for home-assistant
 
 ### Install through HACS:
 
-Add a custom repository in HACS pointed to https://github.com/dkoto/homeassistant-mi-heater
+Add a custom repository in HACS pointed to https://github.com/dkoto5/homeassistant-mi-heater
 
 The new integration for miHeater should appear under your integrations tab.
 
