@@ -5,17 +5,12 @@ from datetime import timedelta
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
+    HVACMode,
+    ClimateEntityFeature,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -30,7 +25,10 @@ _LOGGER = logging.getLogger(__name__)
 from miio import DeviceException
 from miio.heater import MiHeater
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+):
     """Set up Mi Heater climate device based on a config entry."""
     host = entry.data.get("host")
     token = entry.data.get("token")
@@ -47,6 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     # Create and add the entity
     async_add_entities([MiHeaterClimate(coordinator, name, entry.entry_id)], True)
+
 
 class MiHeaterDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the Mi Heater device."""
@@ -69,17 +68,22 @@ class MiHeaterDataUpdateCoordinator(DataUpdateCoordinator):
         except DeviceException as error:
             raise UpdateFailed(f"Error fetching data: {error}") from error
 
+
 class MiHeaterClimate(ClimateEntity):
     """Representation of the Mi Heater climate device."""
 
-    def __init__(self, coordinator: MiHeaterDataUpdateCoordinator, name: str, entry_id: str):
+    # Prefer attribute-style declarations where possible
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
+
+    def __init__(
+        self, coordinator: MiHeaterDataUpdateCoordinator, name: str, entry_id: str
+    ):
         """Initialize the climate device."""
         self.coordinator = coordinator
         self._name = name
         self._unique_id = entry_id
-        self._supported_features = SUPPORT_TARGET_TEMPERATURE
-        self._hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
-        self._attr_temperature_unit = TEMP_CELSIUS
 
     @property
     def name(self):
@@ -92,21 +96,11 @@ class MiHeaterClimate(ClimateEntity):
         return self._unique_id
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._supported_features
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available HVAC modes."""
-        return self._hvac_modes
-
-    @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return the current HVAC mode."""
         if self.coordinator.data.is_on:
-            return HVAC_MODE_HEAT
-        return HVAC_MODE_OFF
+            return HVACMode.HEAT
+        return HVACMode.OFF
 
     @property
     def current_temperature(self):
@@ -119,12 +113,12 @@ class MiHeaterClimate(ClimateEntity):
         return self.coordinator.data.target_temperature
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return 16  # Adjust based on device capabilities
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return 32  # Adjust based on device capabilities
 
@@ -137,11 +131,11 @@ class MiHeaterClimate(ClimateEntity):
             )
             await self.coordinator.async_request_refresh()
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode):
         """Set new target HVAC mode."""
-        if hvac_mode == HVAC_MODE_HEAT:
+        if hvac_mode == HVACMode.HEAT:
             await self.hass.async_add_executor_job(self.coordinator.device.on)
-        elif hvac_mode == HVAC_MODE_OFF:
+        elif hvac_mode == HVACMode.OFF:
             await self.hass.async_add_executor_job(self.coordinator.device.off)
         else:
             _LOGGER.error("Unsupported HVAC mode: %s", hvac_mode)
@@ -151,3 +145,4 @@ class MiHeaterClimate(ClimateEntity):
     async def async_update(self):
         """Fetch new state data for the entity."""
         await self.coordinator.async_request_refresh()
+
